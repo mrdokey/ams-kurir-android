@@ -8,7 +8,7 @@ plugins {
 android {
     compileSdk 35
     defaultConfig {
-        applicationId 'org.traccar.client'
+        applicationId 'com.mrdsolution.amskurir'
         minSdkVersion 21
         targetSdkVersion 35
         versionCode 90
