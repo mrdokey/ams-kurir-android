@@ -53,21 +53,21 @@ class MainActivity : AppCompatActivity() {
 
         setupDefaultPreferences()
         requestAppPermissions()
+        BatteryOptimizationHelper().requestException(this) // Bypass Doze Mode / Penghemat Baterai
         setupWebView()
     }
 
     private fun setupDefaultPreferences() {
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
-        val editor = prefs.edit()
-        
-        if (!prefs.contains("url")) {
-            editor.putString("url", "http://gps.mrdsolution.my.id:5055")
-        }
-        if (!prefs.contains("interval")) {
-            editor.putString("interval", "10")
-        }
-        editor.putBoolean("status", true)
-        editor.apply()
+        prefs.edit()
+            .putString("url", "http://gps.mrdsolution.my.id:5055")
+            .putString("interval", "10")   // Kirim posisi tiap 10 detik
+            .putString("distance", "0")    // Kirim terus meski diam (biar tetap Online di MRD Track)
+            .putString("angle", "0")
+            .putString("accuracy", "high") // WAJIB Satelit GPS agar akurat & hidup saat layar mati
+            .putBoolean("wakelock", true)  // CPU terjaga saat layar HP dikunci
+            .putBoolean("status", true)
+            .apply()
     }
 
     private fun requestAppPermissions() {
@@ -139,7 +139,6 @@ class MainActivity : AppCompatActivity() {
                         addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
 
-                    // Jika HTML meminta capture (capture="environment"), langsung buka KAMERA
                     if (fileChooserParams?.isCaptureEnabled == true) {
                         fileChooserLauncher.launch(takePictureIntent)
                     } else {
@@ -181,7 +180,7 @@ class MainActivity : AppCompatActivity() {
                     .putString("rental_name", clientName.trim())
                     .apply()
 
-                // Restart service di Main Thread dengan jeda aman agar tidak crash di Xiaomi/Android 14
+                // Restart service di Main Thread dengan jeda aman agar tidak crash di Xiaomi
                 runOnUiThread {
                     stopTrackingService()
                     webView.postDelayed({

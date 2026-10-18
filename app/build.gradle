@@ -11,7 +11,7 @@ android {
         applicationId 'com.mrdsolution.amskurir'
         minSdkVersion 24
         targetSdkVersion 36
-        versionCode 92
+        versionCode 93
         versionName '7.9'
         multiDexEnabled true
     }
