@@ -7,22 +7,36 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.webkit.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.preference.PreferenceManager
+import java.io.File
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
     private var fileUploadCallback: ValueCallback<Array<Uri>>? = null
+    private var cameraPhotoUri: Uri? = null
 
     private val fileChooserLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        val dataUris = WebChromeClient.FileChooserParams.parseResult(result.resultCode, result.data)
-        fileUploadCallback?.onReceiveValue(dataUris)
+        if (result.resultCode == RESULT_OK) {
+            val dataUris = if (result.data?.data != null) {
+                WebChromeClient.FileChooserParams.parseResult(result.resultCode, result.data)
+            } else if (cameraPhotoUri != null) {
+                arrayOf(cameraPhotoUri!!)
+            } else {
+                null
+            }
+            fileUploadCallback?.onReceiveValue(dataUris)
+        } else {
+            fileUploadCallback?.onReceiveValue(null)
+        }
         fileUploadCallback = null
     }
 
@@ -34,7 +48,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        supportActionBar?.hide() // 👈 Hilangkan header hijau native
+        supportActionBar?.hide() // Hilangkan header hijau native
         setContentView(R.layout.main)
 
         setupDefaultPreferences()
@@ -74,6 +88,12 @@ class MainActivity : AppCompatActivity() {
         } catch (_: Exception) {}
     }
 
+    fun stopTrackingService() {
+        try {
+            stopService(Intent(this, TrackingService::class.java))
+        } catch (_: Exception) {}
+    }
+
     private fun setupWebView() {
         webView = findViewById(R.id.webView)
         webView.settings.apply {
@@ -106,22 +126,44 @@ class MainActivity : AppCompatActivity() {
                 fileUploadCallback?.onReceiveValue(null)
                 fileUploadCallback = filePathCallback
 
-                val intent = fileChooserParams?.createIntent() ?: Intent(Intent.ACTION_GET_CONTENT).apply {
-                    type = "image/*"
+                return try {
+                    val photoFile = File.createTempFile("kurir_photo_", ".jpg", cacheDir)
+                    cameraPhotoUri = FileProvider.getUriForFile(
+                        this@MainActivity,
+                        "$packageName.fileprovider",
+                        photoFile
+                    )
+
+                    val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
+                        putExtra(MediaStore.EXTRA_OUTPUT, cameraPhotoUri)
+                        addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+
+                    // Jika HTML meminta capture (capture="environment"), langsung buka KAMERA
+                    if (fileChooserParams?.isCaptureEnabled == true) {
+                        fileChooserLauncher.launch(takePictureIntent)
+                    } else {
+                        val contentSelectionIntent = Intent(Intent.ACTION_GET_CONTENT).apply {
+                            addCategory(Intent.CATEGORY_OPENABLE)
+                            type = "image/*"
+                        }
+                        val chooserIntent = Intent(Intent.ACTION_CHOOSER).apply {
+                            putExtra(Intent.EXTRA_INTENT, contentSelectionIntent)
+                            putExtra(Intent.EXTRA_INITIAL_INTENTS, arrayOf(takePictureIntent))
+                        }
+                        fileChooserLauncher.launch(chooserIntent)
+                    }
+                    true
+                } catch (e: Exception) {
+                    fileUploadCallback?.onReceiveValue(null)
+                    fileUploadCallback = null
+                    false
                 }
-                fileChooserLauncher.launch(intent)
-                return true
             }
         }
 
         // Buka Portal Kurir AMS Pro
         webView.loadUrl("https://ams.mrdsolution.my.id/kurir")
-    }
-
-    fun stopTrackingService() {
-        try {
-            stopService(Intent(this, TrackingService::class.java))
-        } catch (_: Exception) {}
     }
 
     inner class WebAppInterface(private val context: Context) {
@@ -139,7 +181,7 @@ class MainActivity : AppCompatActivity() {
                     .putString("rental_name", clientName.trim())
                     .apply()
 
-                // 🔄 Restart service di Main Thread dengan jeda aman agar tidak crash di Xiaomi/Android 14
+                // Restart service di Main Thread dengan jeda aman agar tidak crash di Xiaomi/Android 14
                 runOnUiThread {
                     stopTrackingService()
                     webView.postDelayed({

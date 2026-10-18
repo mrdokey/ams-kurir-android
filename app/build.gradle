@@ -6,12 +6,12 @@ plugins {
 }
 
 android {
-    compileSdk 35
+    compileSdk 36
     defaultConfig {
         applicationId 'com.mrdsolution.amskurir'
         minSdkVersion 24
-        targetSdkVersion 35
-        versionCode 91
+        targetSdkVersion 36
+        versionCode 92
         versionName '7.9'
         multiDexEnabled true
     }
