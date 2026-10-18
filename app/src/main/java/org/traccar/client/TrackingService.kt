@@ -103,7 +103,14 @@ class TrackingService : Service() {
             val staffTitle = "Staf $rentalName"
             val staffDesc = "Aplikasi operasional aktif"
 
-            val builder = NotificationCompat.Builder(context, MainApplication.PRIMARY_CHANNEL)
+            val intent = Intent(context, MainActivity::class.java)
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                PendingIntent.FLAG_IMMUTABLE
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
+            }
+
+            return NotificationCompat.Builder(context, MainApplication.PRIMARY_CHANNEL)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher))
                 .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -111,16 +118,9 @@ class TrackingService : Service() {
                 .setContentTitle(staffTitle)
                 .setContentText(staffDesc)
                 .setTicker(staffTitle)
-                .color = ContextCompat.getColor(context, R.color.primary_dark)
-
-            val intent = Intent(context, MainActivity::class.java)
-            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                PendingIntent.FLAG_IMMUTABLE
-            } else {
-                PendingIntent.FLAG_UPDATE_CURRENT
-            }
-            builder.setContentIntent(PendingIntent.getActivity(context, 0, intent, flags))
-            return builder.build()
+                .setColor(ContextCompat.getColor(context, R.color.primary_dark))
+                .setContentIntent(PendingIntent.getActivity(context, 0, intent, flags))
+                .build()
         }
     }
 }
