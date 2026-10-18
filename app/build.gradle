@@ -31,7 +31,10 @@ android {
             isDefault = true
             ext.enableCrashlytics = false
         }
-        signingConfigs {
+        google
+    }
+
+    signingConfigs {
         release {
             storeFile file("ams-kurir.jks")
             storePassword "AmSKurir2026!"
@@ -45,8 +48,6 @@ android {
             signingConfig signingConfigs.release
             minifyEnabled false
         }
-    }
-        google
     }
 
     testOptions {
