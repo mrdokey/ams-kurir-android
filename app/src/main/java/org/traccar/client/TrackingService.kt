@@ -98,16 +98,22 @@ class TrackingService : Service() {
 
         @SuppressLint("UnspecifiedImmutableFlag")
         private fun createNotification(context: Context): Notification {
+            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+            val rentalName = prefs.getString("rental_name", "")?.takeIf { it.isNotBlank() } ?: "Operasional"
+            val staffTitle = "Staf $rentalName"
+            val staffDesc = "Aplikasi operasional aktif"
+
             val builder = NotificationCompat.Builder(context, MainApplication.PRIMARY_CHANNEL)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher))
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
-            val intent = Intent(context, MainActivity::class.java)
-            builder
-                .setContentTitle(context.getString(R.string.settings_status_on_summary))
-                .setTicker(context.getString(R.string.settings_status_on_summary))
+                .setContentTitle(staffTitle)
+                .setContentText(staffDesc)
+                .setTicker(staffTitle)
                 .color = ContextCompat.getColor(context, R.color.primary_dark)
+
+            val intent = Intent(context, MainActivity::class.java)
             val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 PendingIntent.FLAG_IMMUTABLE
             } else {

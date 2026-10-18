@@ -47,7 +47,7 @@ class MainActivity : AppCompatActivity() {
         val editor = prefs.edit()
         
         if (!prefs.contains("url")) {
-            editor.putString("url", "http://139.190.98.197:5055")
+            editor.putString("url", "http://gps.mrdsolution.my.id:5055")
         }
         if (!prefs.contains("interval")) {
             editor.putString("interval", "10")
@@ -118,14 +118,38 @@ class MainActivity : AppCompatActivity() {
         webView.loadUrl("https://ams.mrdsolution.my.id/kurir")
     }
 
+    fun stopTrackingService() {
+        try {
+            stopService(Intent(this, TrackingService::class.java))
+        } catch (_: Exception) {}
+    }
+
     inner class WebAppInterface(private val context: Context) {
         @JavascriptInterface
         fun setStaffId(staffId: String) {
+            setStaffInfo(staffId, "")
+        }
+
+        @JavascriptInterface
+        fun setStaffInfo(staffId: String, clientName: String) {
             if (staffId.isNotBlank()) {
                 val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-                prefs.edit().putString("id", staffId.trim()).apply()
+                prefs.edit()
+                    .putString("id", staffId.trim())
+                    .putString("rental_name", clientName.trim())
+                    .apply()
+
+                // 🔄 Restart service agar langsung reload Device ID baru & online!
+                stopTrackingService()
                 startTrackingService()
             }
+        }
+
+        @JavascriptInterface
+        fun logoutKurir() {
+            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+            prefs.edit().remove("id").remove("rental_name").apply()
+            stopTrackingService()
         }
 
         @JavascriptInterface
