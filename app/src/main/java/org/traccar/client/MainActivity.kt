@@ -139,9 +139,13 @@ class MainActivity : AppCompatActivity() {
                     .putString("rental_name", clientName.trim())
                     .apply()
 
-                // 🔄 Restart service agar langsung reload Device ID baru & online!
-                stopTrackingService()
-                startTrackingService()
+                // 🔄 Restart service di Main Thread dengan jeda aman agar tidak crash di Xiaomi/Android 14
+                runOnUiThread {
+                    stopTrackingService()
+                    webView.postDelayed({
+                        startTrackingService()
+                    }, 500)
+                }
             }
         }
 
