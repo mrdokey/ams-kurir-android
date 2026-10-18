@@ -34,6 +34,7 @@ import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
 import java.lang.RuntimeException
+import android.graphics.BitmapFactory
 
 class TrackingService : Service() {
 
@@ -98,7 +99,8 @@ class TrackingService : Service() {
         @SuppressLint("UnspecifiedImmutableFlag")
         private fun createNotification(context: Context): Notification {
             val builder = NotificationCompat.Builder(context, MainApplication.PRIMARY_CHANNEL)
-                .setSmallIcon(R.drawable.ic_stat_notify)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher))
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
             val intent = Intent(context, MainActivity::class.java)

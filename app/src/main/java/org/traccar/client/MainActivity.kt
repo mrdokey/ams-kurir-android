@@ -34,6 +34,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        supportActionBar?.hide() // 👈 Hilangkan header hijau native
         setContentView(R.layout.main)
 
         setupDefaultPreferences()
