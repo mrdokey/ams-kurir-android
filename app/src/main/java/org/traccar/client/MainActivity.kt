@@ -109,8 +109,12 @@ class MainActivity : AppCompatActivity() {
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                 val url = request?.url?.toString() ?: return false
-                if (url.startsWith("tel:") || url.startsWith("whatsapp:") || url.startsWith("https://wa.me/")) {
-                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                // Buka Maps, WhatsApp, Telepon, atau link eksternal langsung ke aplikasi aslinya
+                if (url.startsWith("tel:") || url.startsWith("whatsapp:") || url.startsWith("https://wa.me/") || 
+                    url.startsWith("geo:") || url.contains("google.com/maps") || url.contains("maps.app.goo.gl")) {
+                    try {
+                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                    } catch (_: Exception) {}
                     return true
                 }
                 return false
